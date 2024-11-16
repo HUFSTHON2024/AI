@@ -70,7 +70,7 @@ def get_interview_data():
         resume_path = os.path.join(UPLOAD_FOLDER, filename)
         resume_file.save(resume_path)
 
-        api_key = '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'
+        #api_key = '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'
 
         try:
             # 질문 생성
