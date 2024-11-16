@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from openai import OpenAI
+import openai
 import pdfplumber
 import os
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # 업로드 폴더 설정
 UPLOAD_FOLDER = 'uploads'
@@ -34,8 +34,8 @@ def generate_prompt(job_description, resume_text):
 
 # 3. GPT API 호출
 def get_interview_questions(prompt, api_key):
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
+    openai.api_key = api_key
+    response = openai.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "당신은 채용 면접관입니다."},
@@ -55,10 +55,12 @@ def process_questions(questions_text):
 @app.route('/api/interview', methods=['POST'])
 def get_interview_data():
     try:
+        print("get_interview")
         # FormData에서 파일과 텍스트 받기
         if 'resume' not in request.files:
+            print('no resume')
             return jsonify({'success': False, 'error': 'No resume file'}), 400
-            
+        print('good')
         resume_file = request.files['resume']
         job_description = request.form.get('jobDescription')
         
@@ -96,10 +98,12 @@ def get_interview_data():
 
         finally:
             # 임시 파일 삭제
+            print('final')
             if os.path.exists(resume_path):
                 os.remove(resume_path)
 
     except Exception as e:
+        print('bad')
         return jsonify({
             'success': False,
             'error': str(e)
@@ -122,4 +126,4 @@ def get_video(filename):
         }), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5002)
